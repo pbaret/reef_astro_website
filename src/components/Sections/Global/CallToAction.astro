@@ -1,0 +1,59 @@
+---
+// src/components/Sections/Global/CallToAction.astro - l'appel a l'action : une scene sombre cadree, un titre a mot d'accent et un bouton vers la page contact.
+//
+// Meme cadre que le hero (fond de page, coin arrondi, .deep-scene) : la page
+// s'ouvre et se ferme sur la meme forme. Sans image : un aplat qui porte deux
+// phrases et une action n'a pas besoin d'un decor.
+import { Icon } from "@components/svg/icons";
+import { Button } from "@components/ui/button";
+import { getLocale, sectionPath, useTranslations } from "@i18n";
+
+type Props = {
+  title?: string;
+  accentWord?: string;
+  lede?: string;
+  button?: string;
+};
+
+const locale = getLocale(Astro);
+const t = useTranslations(locale);
+const {
+  title = t.home.ctaTitle,
+  accentWord = t.home.ctaAccent,
+  lede = t.home.ctaLede,
+  button = t.common.contactUs,
+} = Astro.props;
+
+const at = title.toLowerCase().indexOf(accentWord.toLowerCase());
+const before = at >= 0 ? title.slice(0, at) : title;
+const word = at >= 0 ? title.slice(at, at + accentWord.length) : "";
+const after = at >= 0 ? title.slice(at + accentWord.length) : "";
+---
+
+<div class="bg-background p-2 sm:p-3 md:p-4" data-slot="call-to-action">
+  <section class="deep-scene rounded-panel relative isolate overflow-hidden" aria-labelledby="cta-title">
+    <div class="container-page relative z-10 flex flex-col items-start gap-6 py-20 md:py-28 lg:flex-row lg:items-end lg:justify-between lg:gap-16">
+      <div class="flex min-w-0 flex-col gap-5">
+        <span class="bg-primary inline-block h-0.5 w-12 rounded-pill" aria-hidden="true"></span>
+        <h2 id="cta-title" class="font-display text-display-sm md:text-display-md max-w-3xl">
+          {
+            word ? (
+              <Fragment>
+                {before}
+                <span class="accent-script">{word}</span>
+                {after}
+              </Fragment>
+            ) : (
+              title
+            )
+          }
+        </h2>
+        <p class="measure-wide text-lg leading-relaxed text-white/85">{lede}</p>
+      </div>
+      <Button href={sectionPath("contact", locale)} variant="primary" size="lg" class="shrink-0">
+        {button}
+        <Icon name="arrow-right" size={18} />
+      </Button>
+    </div>
+  </section>
+</div>

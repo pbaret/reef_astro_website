@@ -1,0 +1,79 @@
+---
+// src/components/Pages/ArticlePage.astro - la page d'un article : fil d'ariane, titre, date, image, contenu, traductions et retour aux actualites.
+import { Icon } from "@components/svg/icons";
+import PageHero from "@components/Sections/Global/PageHero.astro";
+import { Button } from "@components/ui/button";
+import { formatDate, getLocale, localeMeta, locales, sectionPath, useTranslations, type Translations } from "@i18n";
+import type { NewsEntry } from "@js/news";
+import { Image } from "astro:assets";
+import { render } from "astro:content";
+
+type Props = {
+  entry: NewsEntry;
+  /** L'adresse de ce meme article dans chaque langue. */
+  translations: Translations;
+};
+
+const { entry, translations } = Astro.props;
+const locale = getLocale(Astro);
+const t = useTranslations(locale);
+const { data } = entry;
+const { Content } = await render(entry);
+const others = locales.filter((code) => code !== locale);
+---
+
+<PageHero
+  title={data.title}
+  lede={data.description}
+  crumbs={[{ label: t.nav.news, href: sectionPath("news", locale) }, { label: data.title }]}
+>
+  <p class="text-muted-foreground text-sm">
+    {t.common.publishedOn}
+    <time datetime={data.publishDate.toISOString()}>{formatDate(data.publishDate, locale)}</time>
+  </p>
+</PageHero>
+
+<article class="container-page py-16 md:py-24">
+  <Image
+    src={data.image}
+    alt={data.imageAlt}
+    widths={[720, 1200, 1920]}
+    sizes="(min-width: 1024px) 80vw, 100vw"
+    loading="eager"
+    fetchpriority="high"
+    class="rounded-panel aspect-[16/9] w-full object-cover"
+  />
+
+  <div class="prose measure-prose mx-auto mt-12">
+    <Content />
+  </div>
+
+  <footer class="border-border mx-auto mt-16 flex max-w-[var(--measure-prose)] flex-col gap-6 border-t pt-8">
+    <nav aria-label={t.common.alsoAvailable}>
+      <p class="text-muted-foreground text-sm">{t.common.alsoAvailable}</p>
+      <ul class="mt-2 flex flex-wrap gap-2">
+        {
+          others.map((code) => (
+            <li>
+              <a
+                href={translations[code]}
+                lang={localeMeta[code].htmlLang}
+                hreflang={localeMeta[code].htmlLang}
+                class="border-border text-foreground hover:bg-muted rounded-pill inline-flex min-h-11 items-center border px-4 text-sm font-semibold transition-colors duration-150"
+                data-astro-reload
+              >
+                {localeMeta[code].label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+    <div>
+      <Button href={sectionPath("news", locale)} variant="outline">
+        <Icon name="arrow-left" size={17} />
+        {t.common.backToNews}
+      </Button>
+    </div>
+  </footer>
+</article>

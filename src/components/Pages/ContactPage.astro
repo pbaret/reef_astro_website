@@ -1,0 +1,101 @@
+---
+// src/components/Pages/ContactPage.astro - la page "A propos et contact" : presentation, trois engagements et coordonnees fictives.
+import { Icon } from "@components/svg/icons";
+import PageHero from "@components/Sections/Global/PageHero.astro";
+import SocialLinks from "@components/Sections/Global/SocialLinks.astro";
+import { siteData } from "@config/siteData";
+import aboutImage from "../../assets/placeholders/about.svg";
+import { getLocale, useTranslations } from "@i18n";
+import { Image } from "astro:assets";
+
+const locale = getLocale(Astro);
+const t = useTranslations(locale);
+const page = t.contactPage;
+const info = t.contactInfo;
+
+const row = "flex items-start gap-3";
+const rowLabel = "text-muted-foreground block text-xs font-medium tracking-[0.14em] uppercase";
+const link = "text-foreground hover:text-primary-text font-semibold transition-colors duration-150";
+---
+
+<PageHero
+  eyebrow={page.eyebrow}
+  title={page.title}
+  accentWord={page.accent}
+  lede={page.lede}
+  crumbs={[{ label: t.nav.contact }]}
+/>
+
+<section class="container-page py-16 md:py-24" aria-labelledby="about-title">
+  <div class="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+    <div class="flex flex-col gap-5">
+      <h2 id="about-title" class="font-display text-display-sm">{page.aboutTitle}</h2>
+      {page.aboutBody.map((paragraph) => <p class="text-muted-foreground measure-prose text-lg leading-relaxed">{paragraph}</p>)}
+    </div>
+    <Image
+      src={aboutImage}
+      alt={page.imageAlt}
+      widths={[560, 960, 1200]}
+      sizes="(min-width: 1024px) 45vw, 100vw"
+      loading="lazy"
+      decoding="async"
+      class="rounded-panel aspect-[4/3] w-full object-cover"
+    />
+  </div>
+</section>
+
+<section class="bg-surface border-border border-y" aria-labelledby="values-title">
+  <div class="container-page py-20 md:py-28">
+    <h2 id="values-title" class="font-display text-display-sm">{page.valuesTitle}</h2>
+    <ul class="mt-10 grid gap-6 md:grid-cols-3">
+      {
+        page.values.map((value) => (
+          <li class="border-border bg-card rounded-card border p-7">
+            <h3 class="font-display text-foreground text-xl font-semibold">{value.title}</h3>
+            <p class="text-muted-foreground mt-3 leading-relaxed">{value.body}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<section class="container-page py-20 md:py-28" aria-labelledby="info-title">
+  <h2 id="info-title" class="font-display text-display-sm">{page.infoTitle}</h2>
+  <div class="mt-10 grid gap-6 lg:grid-cols-2">
+    <address class="border-border bg-card rounded-panel flex flex-col gap-6 border p-7 not-italic sm:p-9">
+      <p class={row}>
+        <Icon name="map-pin" size={20} class="text-primary-text mt-1 shrink-0" />
+        <span><span class={rowLabel}>{info.addressLabel}</span>{info.address}</span>
+      </p>
+      <p class={row}>
+        <Icon name="phone" size={20} class="text-primary-text mt-1 shrink-0" />
+        <span><span class={rowLabel}>{info.phoneLabel}</span><a href={`tel:${siteData.phoneHref}`} class={link}>{siteData.phone}</a></span>
+      </p>
+      <p class={row}>
+        <Icon name="mail" size={20} class="text-primary-text mt-1 shrink-0" />
+        <span><span class={rowLabel}>{info.emailLabel}</span><a href={`mailto:${siteData.email}`} class={link}>{siteData.email}</a></span>
+      </p>
+    </address>
+
+    <div class="border-border bg-card rounded-panel flex flex-col gap-6 border p-7 sm:p-9">
+      <div class={row}>
+        <Icon name="clock" size={20} class="text-primary-text mt-1 shrink-0" />
+        <div>
+          <h3 class={rowLabel}>{info.hoursLabel}</h3>
+          <ul class="mt-1 flex flex-col gap-1">
+            {info.hours.map((line) => <li>{line}</li>)}
+          </ul>
+        </div>
+      </div>
+
+      <div>
+        <h3 class={rowLabel}>{info.socialLabel}</h3>
+        <SocialLinks
+          listClass="mt-2 flex flex-wrap gap-2"
+          linkClass="border-border text-foreground hover:bg-muted rounded-pill inline-flex min-h-11 items-center gap-2 border px-4 text-sm font-semibold transition-colors duration-150"
+        />
+      </div>
+    </div>
+  </div>
+</section>

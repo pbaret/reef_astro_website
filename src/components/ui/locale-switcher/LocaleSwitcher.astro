@@ -1,0 +1,55 @@
+---
+// src/components/ui/locale-switcher/LocaleSwitcher.astro - le selecteur de langue : EN / FR / ES, chaque lien pointe vers LA MEME page dans l'autre langue.
+//
+// Les adresses viennent de `translations`, la table que la page construit pour
+// ses balises hreflang : le selecteur et le head ne peuvent pas se contredire.
+// Un selecteur qui renvoie tout le monde a l'accueil est le defaut le plus
+// courant des sites multilingues.
+//
+// Aucun drapeau (un drapeau designe un pays, pas une langue) et aucun JavaScript :
+// ce sont des liens. Le nom accessible est le nom complet de la langue, ecrit
+// dans cette langue ; l'attribut lang du lien le fait prononcer correctement.
+//
+// Changer de langue recharge le document au lieu de passer par une view
+// transition : la cible a un autre lang et d'autres balises hreflang, que le
+// routeur client ne remplace pas.
+import { getLocale, localeMeta, locales, useTranslations, type Translations } from "@i18n";
+
+interface Props {
+  translations: Translations;
+  /** "bar" : couleur courante, dans la barre de navigation. "inline" : roles du site, dans le pied de page et le tiroir. */
+  variant?: "bar" | "inline";
+  class?: string;
+}
+
+const { translations, variant = "bar", class: className } = Astro.props;
+const locale = getLocale(Astro);
+const t = useTranslations(locale);
+const bar = variant === "bar";
+
+const link = "rounded-pill grid min-h-11 min-w-11 place-items-center px-2 font-sans text-sm font-semibold transition-colors duration-150";
+const idle = bar ? "text-current/70 hover:bg-current/8 hover:text-current" : "text-muted-foreground hover:bg-muted hover:text-foreground";
+const active = bar ? "bg-current/12 text-current" : "bg-foreground text-background";
+---
+
+<nav class={className} aria-label={t.nav.switchLanguage} data-slot="locale-switcher">
+  <ul class="flex items-center gap-1">
+    {
+      locales.map((code) => (
+        <li>
+          <a
+            href={translations[code]}
+            lang={localeMeta[code].htmlLang}
+            hreflang={localeMeta[code].htmlLang}
+            aria-label={localeMeta[code].label}
+            aria-current={code === locale ? "true" : undefined}
+            class:list={[link, code === locale ? active : idle]}
+            data-astro-reload
+          >
+            {localeMeta[code].short}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>

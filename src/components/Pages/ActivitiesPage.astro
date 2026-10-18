@@ -1,0 +1,24 @@
+---
+// src/components/Pages/ActivitiesPage.astro - la liste des trois activites : en-tete de page, cartes, appel a l'action.
+import ActivityCard from "@components/Cards/ActivityCard.astro";
+import CallToAction from "@components/Sections/Global/CallToAction.astro";
+import PageHero from "@components/Sections/Global/PageHero.astro";
+import { activityIds, getLocale, useTranslations } from "@i18n";
+
+const locale = getLocale(Astro);
+const t = useTranslations(locale);
+---
+
+<PageHero
+  eyebrow={t.activitiesPage.eyebrow}
+  title={t.activitiesPage.title}
+  accentWord={t.activitiesPage.accent}
+  lede={t.activitiesPage.lede}
+  crumbs={[{ label: t.nav.activities }]}
+/>
+<section class="container-page py-20 md:py-28" aria-label={t.nav.activities}>
+  <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    {activityIds.map((id) => <ActivityCard id={id} locale={locale} as="h2" />)}
+  </div>
+</section>
+<CallToAction />

@@ -1,0 +1,100 @@
+---
+// src/components/Sections/Global/Footer.astro - pied de page : marque, trois colonnes (navigation, contact, reseaux), selecteur de langue et mentions.
+//
+// Le pied de page reste sur le papier du site au lieu de basculer en aplat
+// sombre : un site vitrine qui se termine par une grande dalle noire annonce
+// une page commerciale, ici la page se ferme comme un ourlet. Toutes les
+// coordonnees sont FICTIVES (src/config/siteData.ts et le dictionnaire).
+import { Icon } from "@components/svg/icons";
+import SocialLinks from "@components/Sections/Global/SocialLinks.astro";
+import { LocaleSwitcher } from "@components/ui/locale-switcher";
+import { siteData } from "@config/siteData";
+import { getLocale, sectionKeys, sectionPath, useTranslations, type Translations } from "@i18n";
+
+interface Props {
+  /** L'adresse de la page dans chaque langue, pour le selecteur de langue. */
+  translations: Translations;
+}
+
+const { translations } = Astro.props;
+const locale = getLocale(Astro);
+const t = useTranslations(locale);
+
+// L'annee est calculee au build : le site n'embarque pas une date qui vieillit dans un fichier.
+const year = new Date().getFullYear();
+const navigation = sectionKeys.map((key) => ({ href: sectionPath(key, locale), text: t.nav[key] }));
+
+const columnTitle = "font-sans text-muted-foreground text-xs font-medium tracking-[0.18em] uppercase";
+const columnLink =
+  "text-muted-foreground hover:text-foreground inline-flex min-h-11 items-center gap-2 text-[0.95rem] transition-colors duration-150";
+---
+
+<footer class="bg-surface border-border border-t" data-slot="footer">
+  <div class="container-page py-16 md:py-20">
+    <div class="grid gap-12 lg:grid-cols-12 lg:gap-10">
+      <div class="flex flex-col gap-6 lg:col-span-4">
+        <a href={sectionPath("home", locale)} class="flex min-h-11 items-center gap-2" aria-label={t.nav.brandHome}>
+          <Icon name="wave" size={22} class="text-primary" />
+          <span class="font-display text-xl font-semibold tracking-tight">{t.site.name}</span>
+        </a>
+        <p class="text-muted-foreground measure-prose text-[0.95rem] leading-relaxed">{t.site.tagline}</p>
+        <p class="text-muted-foreground measure-prose text-sm leading-relaxed">{t.footer.demoNotice}</p>
+      </div>
+
+      <div class="grid gap-8 sm:grid-cols-3 lg:col-span-8 lg:col-start-5">
+        <div class="flex flex-col gap-2">
+          <h2 class={columnTitle}>{t.footer.navigationTitle}</h2>
+          <ul class="flex flex-col">
+            {
+              navigation.map((link) => (
+                <li>
+                  <a href={link.href} class={columnLink}>
+                    {link.text}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <h2 class={columnTitle}>{t.footer.contactTitle}</h2>
+          <address class="flex flex-col not-italic">
+            <p class="text-muted-foreground flex min-h-11 items-start gap-2 py-2 text-[0.95rem]">
+              <Icon name="map-pin" size={17} class="mt-1 shrink-0" />
+              <span><span class="sr-only">{t.contactInfo.addressLabel}{" "}</span>{t.contactInfo.address}</span>
+            </p>
+            <a href={`tel:${siteData.phoneHref}`} class={columnLink}>
+              <Icon name="phone" size={17} class="shrink-0" />
+              <span><span class="sr-only">{t.contactInfo.phoneLabel}{" "}</span>{siteData.phone}</span>
+            </a>
+            <a href={`mailto:${siteData.email}`} class={columnLink}>
+              <Icon name="mail" size={17} class="shrink-0" />
+              <span><span class="sr-only">{t.contactInfo.emailLabel}{" "}</span>{siteData.email}</span>
+            </a>
+          </address>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <h2 class={columnTitle}>{t.footer.followTitle}</h2>
+          <SocialLinks listClass="flex flex-col" linkClass={columnLink} />
+        </div>
+      </div>
+    </div>
+
+    <div class="border-border mt-14 flex flex-col gap-6 border-t pt-8 sm:flex-row sm:items-center sm:justify-between">
+      <p class="text-muted-foreground text-sm">&copy; {year} {t.site.name}. {t.footer.rights}</p>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <LocaleSwitcher translations={translations} variant="inline" />
+        <a
+          href="#content"
+          class="border-border text-muted-foreground hover:bg-muted hover:text-foreground rounded-pill inline-flex min-h-11 items-center gap-2 border px-4 text-sm transition-colors duration-150"
+        >
+          <Icon name="chevron-up" size={16} />
+          {t.common.backToTop}
+        </a>
+      </div>
+    </div>
+  </div>
+</footer>

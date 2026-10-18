@@ -1,0 +1,10 @@
+# pnpm-workspace.yaml - autorise les scripts d'installation dont le site a besoin (pnpm 10 et 11 bloquent les autres).
+#
+# Sans cette autorisation, `pnpm install` sort en erreur (ERR_PNPM_IGNORED_BUILDS)
+# et `pnpm build` echoue a son tour. Deux dependances seulement :
+#   - esbuild : binaire natif utilise par Astro pour compiler ;
+#   - sharp   : optimisation des images et generation des placeholders.
+allowBuilds:
+  esbuild: true
+  pnpm: set this to true or false
+  sharp: true

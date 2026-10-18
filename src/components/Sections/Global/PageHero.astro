@@ -1,0 +1,102 @@
+---
+// src/components/Sections/Global/PageHero.astro - en-tete compact des pages interieures : fil d'ariane, surtitre, titre a mot d'accent, chapeau.
+//
+// Compact, et c'est le point : l'en-tete d'une page interieure est un panneau
+// indicateur, pas une affiche. Le pt-28 absorbe la barre flottante : PageHero
+// est toujours le premier bloc d'une page interieure, et porte le seul <h1>.
+import { Breadcrumb } from "@components/ui/breadcrumb";
+import { getLocale, sectionPath, useTranslations } from "@i18n";
+import { breadcrumbList, jsonLd } from "@js/schema";
+import { tv, type VariantProps } from "tailwind-variants";
+
+export const pageHero = tv({
+  slots: {
+    root: "bg-surface border-border relative isolate overflow-hidden border-b",
+    inner: "container-page relative z-10 flex flex-col gap-5 pt-28 pb-12 md:pt-36 md:pb-16",
+    eyebrow:
+      "font-sans text-muted-foreground flex items-center gap-3 text-xs font-medium tracking-[0.18em] uppercase",
+    rule: "bg-primary inline-block h-px w-8 shrink-0",
+    // Pas de text-foreground ici (voir SectionHeader.astro) : tailwind-merge
+    // supprimerait la taille text-display-* sous le point de bascule.
+    heading: "font-display text-display-sm sm:text-display-md max-w-4xl",
+    lede: "text-muted-foreground measure-wide text-lg leading-relaxed",
+  },
+  variants: {
+    align: {
+      left: { inner: "items-start text-left" },
+      center: { inner: "items-center text-center", eyebrow: "justify-center" },
+    },
+  },
+  defaultVariants: { align: "left" },
+});
+
+type Crumb = { label: string; href?: string };
+
+type Props = VariantProps<typeof pageHero> & {
+  /** Surtitre court au-dessus du titre : nomme la section, jamais une phrase. */
+  eyebrow?: string;
+  title: string;
+  /** Le mot du titre garde la police du titre, passe au turquoise et porte la
+   *  vague (.accent-script). Un seul, toujours. */
+  accentWord?: string;
+  lede?: string;
+  /** Maillons apres l'accueil ; le dernier, sans href, devient la page courante. */
+  crumbs?: Crumb[];
+  class?: string;
+};
+
+const { eyebrow, title, accentWord, lede, crumbs = [], align, class: className } = Astro.props;
+const { root, inner, eyebrow: eyebrowClass, rule, heading, lede: ledeClass } = pageHero({ align });
+
+// Le premier maillon est toujours l'accueil : il est ajoute ici, dans la bonne
+// langue, pour qu'aucune page n'ait a y penser.
+const locale = getLocale(Astro);
+const t = useTranslations(locale);
+const trail =
+  crumbs.length > 0 ? [{ label: t.common.home, href: sectionPath("home", locale) }, ...crumbs] : [];
+
+// Le JSON-LD derive de la MEME liste que le fil d'ariane visible : les deux ne
+// peuvent pas se desynchroniser. Le dernier maillon est la page en cours.
+const base = Astro.site ?? Astro.url;
+const breadcrumbSchema =
+  trail.length > 0
+    ? breadcrumbList(trail.map((crumb) => ({ name: crumb.label, url: new URL(crumb.href ?? Astro.url.pathname, base).href })))
+    : null;
+
+// Decoupe du titre autour du mot accentue, insensible a la casse.
+const accent = accentWord?.trim() ?? "";
+const at = accent ? title.toLowerCase().indexOf(accent.toLowerCase()) : -1;
+const before = at >= 0 ? title.slice(0, at) : title;
+const word = at >= 0 ? title.slice(at, at + accent.length) : "";
+const after = at >= 0 ? title.slice(at + accent.length) : "";
+---
+
+<section class={root({ class: className })} data-slot="page-hero">
+  {breadcrumbSchema && <script type="application/ld+json" set:html={jsonLd(breadcrumbSchema)} />}
+  <div class={inner()}>
+    {trail.length > 0 && <Breadcrumb items={trail} label={t.common.breadcrumbLabel} />}
+    {
+      eyebrow && (
+        <p class={eyebrowClass()}>
+          <span class={rule()} aria-hidden="true" />
+          {eyebrow}
+        </p>
+      )
+    }
+    <h1 class={heading()}>
+      {
+        word ? (
+          <Fragment>
+            {before}
+            <span class="accent-script">{word}</span>
+            {after}
+          </Fragment>
+        ) : (
+          title
+        )
+      }
+    </h1>
+    {lede && <p class={ledeClass()}>{lede}</p>}
+    <slot />
+  </div>
+</section>

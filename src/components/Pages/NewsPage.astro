@@ -1,0 +1,30 @@
+---
+// src/components/Pages/NewsPage.astro - la liste des actualites : en-tete de page et cartes d'articles, du plus recent au plus ancien.
+import NewsCard from "@components/Cards/NewsCard.astro";
+import PageHero from "@components/Sections/Global/PageHero.astro";
+import { getLocale, useTranslations } from "@i18n";
+import { getNews } from "@js/news";
+
+const locale = getLocale(Astro);
+const t = useTranslations(locale);
+const entries = await getNews(locale);
+---
+
+<PageHero
+  eyebrow={t.newsPage.eyebrow}
+  title={t.newsPage.title}
+  accentWord={t.newsPage.accent}
+  lede={t.newsPage.lede}
+  crumbs={[{ label: t.nav.news }]}
+/>
+<section class="container-page py-16 md:py-24" aria-label={t.nav.news}>
+  {
+    entries.length > 0 ? (
+      <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {entries.map((entry) => <NewsCard entry={entry} locale={locale} as="h2" />)}
+      </div>
+    ) : (
+      <p class="text-muted-foreground text-lg">{t.newsList.empty}</p>
+    )
+  }
+</section>

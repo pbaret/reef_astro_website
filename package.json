@@ -1,0 +1,48 @@
+{
+  "name": "reef-showcase",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "A static, trilingual (en, fr, es) showcase site skeleton built from the Reef Astro theme.",
+  "license": "MIT",
+  "author": "Aloha Pixel (https://alohapixel.app)",
+  "keywords": [
+    "astro",
+    "astro-theme",
+    "tailwindcss",
+    "i18n"
+  ],
+  "packageManager": "pnpm@11.22.0",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "scripts": {
+    "build": "astro build",
+    "build:check": "astro build && node scripts/check-seo.mjs",
+    "check": "astro check",
+    "check:seo": "node scripts/check-seo.mjs",
+    "dev": "astro dev",
+    "lint:house": "node scripts/house.mjs",
+    "placeholders": "node scripts/placeholders.mjs",
+    "preview": "astro preview",
+    "test": "node scripts/checks.mjs"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.3",
+    "@fontsource-variable/instrument-sans": "^5.3.0",
+    "@fontsource-variable/space-grotesk": "^5.3.0",
+    "@tailwindcss/vite": "^4.3.2",
+    "astro": "^7.3.1",
+    "pnpm": "^12.11.2",
+    "tailwind-merge": "^3.6.0",
+    "tailwind-variants": "^3.2.2",
+    "tailwindcss": "^4.3.2"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.9",
+    "sharp": "^0.35.3",
+    "typescript": "^5.9.0"
+  },
+  "allowScripts": {
+    "pnpm@12.11.2": true
+  }
+}

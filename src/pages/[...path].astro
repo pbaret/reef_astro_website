@@ -1,0 +1,95 @@
+---
+// src/pages/[...path].astro - la route unique du site : une page statique par entree de listPages() (src/js/pages.ts), dans chaque langue.
+//
+// Les segments d'URL sont traduits (/fr/actualites/, /es/noticias/), ce que le
+// routage par dossiers d'Astro ne sait pas faire sans dupliquer les pages. Une
+// route a parametre libre les genere toutes, depuis la table de src/i18n/routes.ts.
+// Aucune page ne contient de texte : tout vient du dictionnaire et de la collection.
+// Le titre, la description, l'image de partage et le JSON-LD d'une page derivent
+// des MEMES donnees (le dictionnaire ou l'entree de la collection).
+import ActivitiesPage from "@components/Pages/ActivitiesPage.astro";
+import ActivityPage from "@components/Pages/ActivityPage.astro";
+import ArticlePage from "@components/Pages/ArticlePage.astro";
+import ContactPage from "@components/Pages/ContactPage.astro";
+import GalleryPage from "@components/Pages/GalleryPage.astro";
+import HomePage from "@components/Pages/HomePage.astro";
+import NewsPage from "@components/Pages/NewsPage.astro";
+import { siteData } from "@config/siteData";
+import { getLocale, localeMeta, sectionPath, useTranslations } from "@i18n";
+import { listPages, routeParam, type PageDescriptor } from "@js/pages";
+import { newsShareImage } from "@js/news";
+import { blogPosting, jsonLd, organization, webPage, website, type JsonLdNode } from "@js/schema";
+import BaseLayout from "@layouts/BaseLayout.astro";
+
+export async function getStaticPaths() {
+  const pages = await listPages();
+  return pages.map((page) => ({ params: { path: routeParam(page.path) }, props: { page } }));
+}
+
+const { page } = Astro.props as { page: PageDescriptor };
+const locale = getLocale(Astro);
+const t = useTranslations(locale);
+const inLanguage = localeMeta[locale].htmlLang;
+const base = Astro.site ?? Astro.url;
+
+// Le titre, la description et la rubrique courante de la barre, selon la page.
+const seo =
+  page.kind === "activity"
+    ? { title: t.activities[page.id].name, description: t.activities[page.id].summary, current: "activities" as const }
+    : page.kind === "article"
+      ? { title: page.entry.data.title, description: page.entry.data.description, current: "news" as const }
+      : { ...t.seo[page.kind], current: page.kind };
+
+const url = new URL(page.path, base).href;
+const siteUrl = new URL(sectionPath("home", locale), base).href;
+
+// L'image de partage d'un article : la sienne si elle est matricielle, sinon la carte par defaut (BaseHead).
+const shareSrc = page.kind === "article" ? await newsShareImage(page.entry) : undefined;
+const image = page.kind === "article" && shareSrc ? { src: shareSrc, alt: page.entry.data.imageAlt } : undefined;
+
+// Seuls les profils sociaux REELS sont declares : un placeholder n'est jamais publie en sameAs.
+const sameAs = siteData.socials.filter((social) => !social.placeholder).map((social) => social.href);
+
+const nodes: JsonLdNode[] =
+  page.kind === "home"
+    ? [
+        organization({ name: t.site.name, url, sameAs }),
+        website({ name: t.site.name, url, description: t.site.description, inLanguage }),
+      ]
+    : page.kind === "article"
+      ? [
+          blogPosting({
+            headline: seo.title,
+            description: seo.description,
+            url,
+            inLanguage,
+            datePublished: page.entry.data.publishDate,
+            dateModified: page.entry.data.updatedDate,
+            image: shareSrc ? new URL(shareSrc, base).href : undefined,
+            organizationName: t.site.name,
+          }),
+        ]
+      : [webPage({ name: seo.title, description: seo.description, url, inLanguage, siteUrl })];
+---
+
+<BaseLayout
+  title={seo.title}
+  description={seo.description}
+  translations={page.translations}
+  current={seo.current}
+  type={page.kind === "article" ? "article" : "website"}
+  image={image}
+  publishedTime={page.kind === "article" ? page.entry.data.publishDate : undefined}
+  modifiedTime={page.kind === "article" ? page.entry.data.updatedDate : undefined}
+>
+  <Fragment slot="head">
+    {nodes.map((node) => <script type="application/ld+json" set:html={jsonLd(node)} />)}
+  </Fragment>
+  {page.kind === "home" && <HomePage />}
+  {page.kind === "activities" && <ActivitiesPage />}
+  {page.kind === "activity" && <ActivityPage id={page.id} />}
+  {page.kind === "gallery" && <GalleryPage />}
+  {page.kind === "news" && <NewsPage />}
+  {page.kind === "article" && <ArticlePage entry={page.entry} translations={page.translations} />}
+  {page.kind === "contact" && <ContactPage />}
+</BaseLayout>

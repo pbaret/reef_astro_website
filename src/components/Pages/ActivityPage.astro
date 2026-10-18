@@ -1,0 +1,116 @@
+---
+// src/components/Pages/ActivityPage.astro - la page d'une activite : fil d'ariane, image, deux sections, benefices, trois vignettes, contact et les deux autres activites.
+import ActivityCard from "@components/Cards/ActivityCard.astro";
+import { Icon } from "@components/svg/icons";
+import PageHero from "@components/Sections/Global/PageHero.astro";
+import CallToAction from "@components/Sections/Global/CallToAction.astro";
+import { activityMedia } from "@data/activities";
+import { galleryImages } from "@data/gallery";
+import { activityIds, getLocale, sectionPath, useTranslations, type ActivityId } from "@i18n";
+import { Image } from "astro:assets";
+
+type Props = { id: ActivityId };
+
+const { id } = Astro.props;
+const locale = getLocale(Astro);
+const t = useTranslations(locale);
+const item = t.activities[id];
+const media = activityMedia[id];
+const others = activityIds.filter((other) => other !== id);
+const thumbs = media.gallery.map((index) => ({ image: galleryImages[index]!, text: t.gallery[index]! }));
+---
+
+<PageHero
+  title={item.name}
+  lede={item.intro}
+  crumbs={[{ label: t.nav.activities, href: sectionPath("activities", locale) }, { label: item.name }]}
+/>
+
+<div class="container-page py-16 md:py-24">
+  <Image
+    src={media.image}
+    alt={item.imageAlt}
+    widths={[720, 1200, 1920]}
+    sizes="(min-width: 1024px) 80vw, 100vw"
+    loading="eager"
+    fetchpriority="high"
+    class="rounded-panel aspect-[16/9] w-full object-cover md:aspect-[2/1]"
+  />
+
+  <div class="mt-16 grid gap-12 lg:grid-cols-12 lg:gap-16">
+    <div class="flex flex-col gap-12 lg:col-span-7">
+      {
+        item.sections.map((section) => (
+          <section class="flex flex-col gap-4">
+            <h2 class="font-display text-display-sm">{section.title}</h2>
+            {section.body.map((paragraph) => <p class="text-muted-foreground measure-prose text-lg leading-relaxed">{paragraph}</p>)}
+          </section>
+        ))
+      }
+    </div>
+
+    <aside class="lg:col-span-5" aria-labelledby="benefits-title">
+      <div class="border-border bg-card rounded-panel border p-7 sm:p-9">
+        <h2 id="benefits-title" class="font-display text-foreground text-2xl font-semibold tracking-tight">
+          {t.activitiesPage.benefitsTitle}
+        </h2>
+        <ul class="mt-6 flex flex-col gap-4">
+          {
+            item.benefits.map((benefit) => (
+              <li class="flex items-start gap-3">
+                <Icon name="check-circle" size={20} class="text-primary-text mt-0.5 shrink-0" />
+                <span class="text-foreground">{benefit}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <section class="mt-20 flex flex-col gap-8" aria-labelledby="activity-gallery-title">
+    <h2 id="activity-gallery-title" class="font-display text-display-sm">{t.activitiesPage.galleryTitle}</h2>
+    <ul class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      {
+        thumbs.map(({ image, text }) => (
+          <li>
+            <figure class="flex flex-col gap-2">
+              <Image
+                src={image.src}
+                alt={text.alt}
+                widths={[420, 760]}
+                sizes="(min-width: 640px) 28vw, 92vw"
+                loading="lazy"
+                decoding="async"
+                class="rounded-card aspect-[4/3] w-full object-cover"
+              />
+              <figcaption class="text-muted-foreground text-sm">{text.caption}</figcaption>
+            </figure>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</div>
+
+<section class="bg-surface border-border border-y" aria-labelledby="other-activities-title">
+  <div class="container-page py-20 md:py-28">
+    <h2 id="other-activities-title" class="font-display text-display-sm">{t.activitiesPage.otherTitle}</h2>
+    <ul class="mt-10 grid gap-6 sm:grid-cols-2">
+      {
+        others.map((other) => (
+          <li>
+            <ActivityCard id={other} locale={locale} as="h3" />
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<CallToAction
+  title={t.activitiesPage.ctaTitle}
+  accentWord={t.activitiesPage.ctaAccent}
+  lede={t.activitiesPage.ctaLede}
+  button={t.activitiesPage.ctaButton}
+/>

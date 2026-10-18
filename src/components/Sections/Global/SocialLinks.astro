@@ -1,0 +1,32 @@
+---
+// src/components/Sections/Global/SocialLinks.astro - les liens Instagram, Facebook et WhatsApp : de simples liens, aucun SDK, aucun script tiers.
+//
+// La liste vient de siteData.socials (une seule source) et les libelles du
+// dictionnaire. Chaque lien a un nom accessible explicite ("Suivez-nous sur
+// Instagram"), qui contient le texte visible.
+import { Icon } from "@components/svg/icons";
+import { siteData } from "@config/siteData";
+import { getLocale, useTranslations } from "@i18n";
+
+type Props = {
+  /** Classes de la liste et de chaque lien : le pied de page et la page contact ne les habillent pas pareil. */
+  listClass?: string;
+  linkClass?: string;
+};
+
+const { listClass, linkClass } = Astro.props;
+const t = useTranslations(getLocale(Astro));
+---
+
+<ul class={listClass}>
+  {
+    siteData.socials.map((social) => (
+      <li>
+        <a href={social.href} class={linkClass} aria-label={t.footer.social[social.key].aria} rel="noopener noreferrer">
+          {t.footer.social[social.key].label}
+          <Icon name="arrow-up-right" size={15} />
+        </a>
+      </li>
+    ))
+  }
+</ul>

@@ -1,0 +1,22 @@
+---
+// src/components/Sections/Home/ActivitiesSection.astro - la presentation des trois activites : titre de section et trois cartes.
+import ActivityCard from "@components/Cards/ActivityCard.astro";
+import SectionHeader from "@components/Sections/Global/SectionHeader.astro";
+import { activityIds, getLocale, useTranslations } from "@i18n";
+
+const locale = getLocale(Astro);
+const t = useTranslations(locale);
+---
+
+<section class="container-page py-24 md:py-32" aria-labelledby="activities-title" data-slot="home-activities">
+  <SectionHeader
+    headingId="activities-title"
+    eyebrow={t.home.activitiesEyebrow}
+    title={t.home.activitiesTitle}
+    accentWord={t.home.activitiesAccent}
+    lede={t.home.activitiesLede}
+  />
+  <div class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    {activityIds.map((id) => <ActivityCard id={id} locale={locale} />)}
+  </div>
+</section>

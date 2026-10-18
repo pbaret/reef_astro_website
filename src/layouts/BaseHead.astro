@@ -1,0 +1,105 @@
+---
+// src/layouts/BaseHead.astro - la couche SEO : meta, canonical, hreflang, Open Graph, favicon, polices, view transitions.
+// Chaque balise est ecrite a la main, lisible et modifiable ici : zero paquet SEO.
+// Pas de balises twitter:* : Open Graph suffit a presenter une URL partagee.
+//
+// Deux familles de polices, pas une de plus : Space Grotesk (affichage) et
+// Instrument Sans (texte). Leurs fichiers woff2 sont PRECHARGES : les regles
+// @font-face partent dans la feuille en ligne, donc sans prechargement le
+// navigateur ne decouvre la police qu'apres avoir lu le CSS, peint avec la
+// police de secours, puis echange (un decalage de mise en page mesurable).
+import "@fontsource-variable/space-grotesk";
+import "@fontsource-variable/instrument-sans";
+import "@fontsource-variable/instrument-sans/wght-italic.css";
+import policeAffichage from "@fontsource-variable/space-grotesk/files/space-grotesk-latin-wght-normal.woff2?url";
+import policeTexte from "@fontsource-variable/instrument-sans/files/instrument-sans-latin-wght-normal.woff2?url";
+import { siteData } from "@config/siteData";
+import { defaultLocale, getLocale, localeMeta, locales, useTranslations, type Locale, type Translations } from "@i18n";
+import tokensRaw from "@styles/tokens.css?raw";
+import { ClientRouter } from "astro:transitions";
+
+export interface Props {
+  title: string;
+  description?: string;
+  image?: { src: string; alt: string };
+  type?: "website" | "article";
+  noindex?: boolean;
+  /** Pour type="article" : date de publication reelle, et de modification seulement si elle existe. */
+  publishedTime?: Date;
+  modifiedTime?: Date | undefined;
+  /** L'adresse de cette page dans chaque langue. Absente (page introuvable) : ni canonical ni hreflang. */
+  translations?: Translations;
+}
+
+const locale = getLocale(Astro);
+const t = useTranslations(locale);
+const { title, description = t.site.description, image, type = "website", noindex = false, translations, publishedTime, modifiedTime } = Astro.props;
+
+// "Titre | Marque", sauf si le titre porte deja la marque.
+const fullTitle = title.includes(t.site.name) ? title : `${title}${t.site.separator}${t.site.name}`;
+
+// Une seule forme d'URL canonique : celle de trailingSlash "always" dans astro.config.
+const base = Astro.site ?? Astro.url;
+const canonical = new URL(translations?.[locale] ?? Astro.url.pathname, base);
+const carte = image ?? { src: siteData.ogImage, alt: t.site.ogImageAlt };
+const imageUrl = new URL(carte.src, base);
+
+// hreflang : chaque page declare ses soeurs, y compris elle-meme, et x-default
+// pointe vers la langue par defaut. Les adresses viennent de la meme table que
+// le selecteur de langue : les deux ne peuvent pas se contredire.
+const alternates = translations
+  ? locales.map((code) => ({ hreflang: localeMeta[code].htmlLang, href: new URL(translations[code], base).href, code }))
+  : [];
+const xDefault = alternates.find((alt) => alt.code === defaultLocale);
+// og:locale veut du snake_case (en_US), pas du BCP-47 (en-US).
+const ogLocale = (code: Locale) => localeMeta[code].intl.replace("-", "_");
+
+// La couleur de la barre du navigateur est LUE dans tokens.css (le fond de page,
+// --reef-background, puis la couleur qu'il nomme) : un changement de palette
+// l'emporte avec lui, et un jeton introuvable casse le build.
+const root = /\n:root\s*\{([\s\S]*?)\n\}/.exec(tokensRaw)?.[1] ?? "";
+const alias = /--reef-background:\s*var\(--([\w-]+)\)/.exec(root)?.[1];
+const ground = alias ? new RegExp(`--${alias}:\\s*([^;]+);`).exec(tokensRaw)?.[1]?.trim() : undefined;
+if (!ground) throw new Error("tokens.css : fond de page introuvable, theme-color ne peut pas etre pose");
+---
+
+<meta charset="utf-8" />
+{/* viewport-fit=cover : necessaire pour que env(safe-area-inset-*) fonctionne sur iPhone a encoche. */}
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="generator" content={Astro.generator} />
+
+{/* crossorigin est OBLIGATOIRE sur un preload de police : sans lui le navigateur telecharge le fichier deux fois. */}
+<link rel="preload" href={policeAffichage} as="font" type="font/woff2" crossorigin />
+<link rel="preload" href={policeTexte} as="font" type="font/woff2" crossorigin />
+
+<title>{fullTitle}</title>
+<meta name="description" content={description} />
+{translations && <link rel="canonical" href={canonical.href} />}
+{noindex && <meta name="robots" content="noindex, nofollow" />}
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<link rel="sitemap" href="/sitemap-index.xml" />
+
+{alternates.map((alt) => <link rel="alternate" hreflang={alt.hreflang} href={alt.href} />)}
+{xDefault && <link rel="alternate" hreflang="x-default" href={xDefault.href} />}
+
+<meta name="theme-color" content={ground} />
+
+{/* Open Graph, complet : l'apercu de partage est la premiere impression du site. */}
+<meta property="og:type" content={type} />
+{translations && <meta property="og:url" content={canonical.href} />}
+<meta property="og:site_name" content={t.site.name} />
+<meta property="og:title" content={fullTitle} />
+<meta property="og:description" content={description} />
+<meta property="og:image" content={imageUrl.href} />
+<meta property="og:image:alt" content={carte.alt} />
+<meta property="og:locale" content={ogLocale(locale)} />
+{alternates.filter((alt) => alt.code !== locale).map((alt) => <meta property="og:locale:alternate" content={ogLocale(alt.code)} />)}
+{type === "article" && publishedTime && <meta property="article:published_time" content={publishedTime.toISOString()} />}
+{type === "article" && modifiedTime && <meta property="article:modified_time" content={modifiedTime.toISOString()} />}
+
+{/* Le slot recoit les <script type="application/ld+json"> construits avec @js/schema. */}
+<slot />
+
+{siteData.useViewTransitions && <ClientRouter />}

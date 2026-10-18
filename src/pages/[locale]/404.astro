@@ -1,0 +1,11 @@
+---
+// src/pages/[locale]/404.astro - la page introuvable de chaque langue prefixee (fr/404.html, es/404.html) ; voir pagesIntrouvables dans astro.config.mjs.
+import NotFound from "@components/Sections/Global/NotFound.astro";
+import { defaultLocale, locales } from "@i18n";
+
+export function getStaticPaths() {
+  return locales.filter((locale) => locale !== defaultLocale).map((locale) => ({ params: { locale } }));
+}
+---
+
+<NotFound />

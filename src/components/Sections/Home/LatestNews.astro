@@ -1,0 +1,34 @@
+---
+// src/components/Sections/Home/LatestNews.astro - l'apercu des trois articles les plus recents, avec un lien vers la liste complete.
+import NewsCard from "@components/Cards/NewsCard.astro";
+import { Icon } from "@components/svg/icons";
+import SectionHeader from "@components/Sections/Global/SectionHeader.astro";
+import { Button } from "@components/ui/button";
+import { getLocale, sectionPath, useTranslations } from "@i18n";
+import { getNews } from "@js/news";
+
+const locale = getLocale(Astro);
+const t = useTranslations(locale);
+const latest = (await getNews(locale)).slice(0, 3);
+---
+
+<section class="bg-surface border-border border-y" aria-labelledby="news-title" data-slot="home-news">
+  <div class="container-page py-24 md:py-32">
+    <div class="flex flex-col gap-8 sm:flex-row sm:items-end sm:justify-between">
+      <SectionHeader
+        headingId="news-title"
+        eyebrow={t.home.newsEyebrow}
+        title={t.home.newsTitle}
+        accentWord={t.home.newsAccent}
+        lede={t.home.newsLede}
+      />
+      <Button href={sectionPath("news", locale)} variant="outline" class="shrink-0">
+        {t.common.allNews}
+        <Icon name="arrow-right" size={17} />
+      </Button>
+    </div>
+    <div class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {latest.map((entry) => <NewsCard entry={entry} locale={locale} />)}
+    </div>
+  </div>
+</section>

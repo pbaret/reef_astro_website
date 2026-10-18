@@ -1,0 +1,63 @@
+---
+// src/components/Pages/GalleryPage.astro - la galerie : en-tete de page et grille responsive stable de onze images locales.
+//
+// Pas de lightbox : Reef n'en embarque pas, et aucune dependance n'est ajoutee.
+//
+// Stabilite de la grille : deux colonnes sur telephone, trois des md. Les
+// vignettes standard ont un ratio fixe (4/3) et fixent la hauteur des rangees ;
+// la vignette "feature" couvre deux colonnes (et deux rangees des md), la
+// "wide" deux colonnes des md. Le compte tombe juste a chaque largeur, sans
+// trou. L'image est posee en absolu dans sa case : elle ne peut pas deformer
+// la grille, et ses attributs width/height (venus de l'import) evitent tout
+// decalage au chargement. Les legendes sont toujours visibles, rien ne depend du survol.
+import PageHero from "@components/Sections/Global/PageHero.astro";
+import { galleryImages, type GalleryShape } from "@data/gallery";
+import { getLocale, useTranslations } from "@i18n";
+import { Image } from "astro:assets";
+
+const locale = getLocale(Astro);
+const t = useTranslations(locale);
+
+const shapes: Record<GalleryShape, string> = {
+  standard: "aspect-[4/3]",
+  feature: "col-span-2 aspect-[16/9] md:row-span-2 md:aspect-auto",
+  wide: "aspect-[4/3] md:col-span-2 md:aspect-auto",
+};
+---
+
+<PageHero
+  eyebrow={t.galleryPage.eyebrow}
+  title={t.galleryPage.title}
+  accentWord={t.galleryPage.accent}
+  lede={t.galleryPage.lede}
+  crumbs={[{ label: t.nav.gallery }]}
+/>
+
+<section class="container-page py-16 md:py-24" aria-label={t.nav.gallery}>
+  <ul class="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5">
+    {
+      galleryImages.map((image, index) => {
+        const text = t.gallery[index]!;
+        return (
+          <li class:list={["group rounded-card relative isolate overflow-hidden", shapes[image.shape]]}>
+            <figure class="size-full">
+              <Image
+                src={image.src}
+                alt={text.alt}
+                widths={[420, 760, 1200]}
+                sizes={image.shape === "standard" ? "(min-width: 768px) 30vw, 46vw" : "(min-width: 768px) 62vw, 94vw"}
+                loading={index === 0 ? "eager" : "lazy"}
+                fetchpriority={index === 0 ? "high" : undefined}
+                decoding="async"
+                class="absolute inset-0 size-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+              <figcaption class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/40 to-transparent p-3 pt-10 text-xs text-white sm:p-4 sm:pt-12 sm:text-sm">
+                {text.caption}
+              </figcaption>
+            </figure>
+          </li>
+        );
+      })
+    }
+  </ul>
+</section>

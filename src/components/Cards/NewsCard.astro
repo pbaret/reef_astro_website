@@ -1,0 +1,53 @@
+---
+// src/components/Cards/NewsCard.astro - la carte d'un article d'actualite : image, date, titre, resume et lien.
+//
+// Reprend la carte de billet de Reef, sans sujet ni auteur : le lien couvre
+// toute la carte via ::after (un seul arret de tabulation) et la date reste
+// selectionnable.
+import { formatDate, type Locale } from "@i18n";
+import { newsHref, type NewsEntry } from "@js/news";
+import { Image } from "astro:assets";
+
+type Props = {
+  entry: NewsEntry;
+  locale: Locale;
+  /** Niveau de titre reel : h2 dans une grille sans sous-titre, h3 sous un titre de section. */
+  as?: "h2" | "h3";
+  class?: string;
+};
+
+const { entry, locale, as: Tag = "h3", class: className }: Props = Astro.props;
+const { data } = entry;
+---
+
+<article
+  class:list={[
+    "group border-border bg-card rounded-card relative flex flex-col overflow-hidden border",
+    "transition-[border-color,transform,box-shadow] duration-300",
+    "hover:shadow-float hover:border-foreground/20 hover:-translate-y-0.5",
+    className,
+  ]}
+  data-slot="news-card"
+>
+  <Image
+    src={data.image}
+    alt={data.imageAlt}
+    widths={[420, 760]}
+    sizes="(min-width: 1024px) 24rem, (min-width: 640px) 45vw, 92vw"
+    class="aspect-[16/9] w-full object-cover"
+    loading="lazy"
+    decoding="async"
+  />
+
+  <div class="flex flex-1 flex-col gap-3 p-6">
+    <p class="text-muted-foreground font-sans text-xs">
+      <time datetime={data.publishDate.toISOString()}>{formatDate(data.publishDate, locale)}</time>
+    </p>
+    <Tag class="font-display text-foreground text-xl leading-snug font-semibold text-balance">
+      <a href={newsHref(entry)} class="after:absolute after:inset-0 after:content-['']">
+        {data.title}
+      </a>
+    </Tag>
+    <p class="text-muted-foreground line-clamp-3 text-[0.95rem] leading-relaxed">{data.description}</p>
+  </div>
+</article>

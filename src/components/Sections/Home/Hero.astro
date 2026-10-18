@@ -1,0 +1,118 @@
+---
+// src/components/Sections/Home/Hero.astro - le premier ecran : une scene sombre pleine page, l'accroche et le titre a gauche, le chapeau et les deux actions a droite.
+//
+// C'est le patron du premier ecran de Reef, conserve : un cadre arrondi pose
+// sur le fond de page, une image tout au fond, un voile de lecture, deux
+// colonnes inegales sur grand ecran et une seule colonne sur telephone.
+//
+// La scene reste sombre (.deep-scene, voir global.css) : un cadre qui blanchit
+// perd ses lueurs de bordure et son contraste, et le premier ecran redevient
+// une page de texte. L'image est un placeholder local (src/assets/placeholders).
+import heroImage from "../../../assets/placeholders/hero.svg";
+import { Icon } from "@components/svg/icons";
+import { Button } from "@components/ui/button";
+import { getLocale, sectionPath, useTranslations } from "@i18n";
+import { Image } from "astro:assets";
+
+const locale = getLocale(Astro);
+const t = useTranslations(locale);
+
+// Decoupe du titre autour du mot accentue, insensible a la casse.
+const title = t.home.title;
+const accent = t.home.titleAccent;
+const at = title.toLowerCase().indexOf(accent.toLowerCase());
+const before = at >= 0 ? title.slice(0, at) : title;
+const word = at >= 0 ? title.slice(at, at + accent.length) : "";
+const after = at >= 0 ? title.slice(at + accent.length) : "";
+---
+
+{/* Le fond de page sur lequel la scene est posee : sans marge autour, le coin
+    arrondi n'aurait rien contre quoi se detacher. */}
+<div class="bg-background p-2 sm:p-3 md:p-4" data-slot="home-hero">
+  <section class="deep-scene rounded-panel relative isolate overflow-hidden" aria-labelledby="hero-title" data-deep-scene>
+    {/* loading="eager" et fetchpriority="high" : c'est le premier ecran, le
+        charger paresseusement afficherait un trou noir. Les dimensions viennent
+        de l'import, donc aucun decalage de mise en page au chargement. */}
+    <Image
+      src={heroImage}
+      alt={t.home.imageAlt}
+      widths={[720, 1200, 1920]}
+      sizes="100vw"
+      loading="eager"
+      fetchpriority="high"
+      class="pointer-events-none absolute inset-0 size-full object-cover object-[65%_100%] sm:object-[center_65%]"
+    />
+
+    {/* Voile de lecture, en deux couches : l'horizontal couvre la colonne de
+        texte puis s'ouvre pour laisser l'image, le vertical ancre le haut et
+        le bas du cadre. Le noir est un canal alpha, pas une couleur : il n'a
+        donc pas de token. */}
+    <div class="hero-veil pointer-events-none absolute inset-0" aria-hidden="true"></div>
+    <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-black/30" aria-hidden="true"></div>
+
+    {/* min-h-[80svh] : le premier ecran pese quatre cinquiemes de la hauteur
+        reelle. svh et non vh, parce que la barre d'adresse mobile fait varier
+        vh en cours de defilement. min-w-0 sur les colonnes : un mot long du
+        titre n'elargit pas la piste de la grille. */}
+    <div class="container-page relative z-10 flex min-h-[80svh] flex-col justify-center pt-28 pb-14 sm:pt-32 md:pt-40 md:pb-20 lg:pt-44 lg:pb-24">
+      <div class="grid w-full gap-10 sm:gap-14 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-end lg:gap-x-16">
+        <div class="flex min-w-0 flex-col items-start">
+          <p class="text-muted-foreground flex items-center gap-3 text-xs font-medium tracking-[0.18em] uppercase">
+            <span class="bg-primary inline-block h-px w-8 shrink-0" aria-hidden="true"></span>
+            {t.home.eyebrow}
+          </p>
+
+          <h1 id="hero-title" class="font-display text-display-lg lg:text-display-xl mt-6">
+            {
+              word ? (
+                <Fragment>
+                  {before}
+                  <span class="accent-script">{word}</span>
+                  {after}
+                </Fragment>
+              ) : (
+                title
+              )
+            }
+          </h1>
+        </div>
+
+        {/* Le chapeau passe en blanc franc plutot qu'en muted : le gris de texte
+            secondaire est calcule pour un aplat sombre, pas pour une image. */}
+        <div class="flex min-w-0 flex-col items-start lg:justify-end lg:pb-2">
+          <p class="measure-wide leading-relaxed text-white/85 md:text-lg lg:text-xl">{t.home.lede}</p>
+
+          <div class="mt-8 flex flex-wrap items-center gap-3">
+            <Button href={sectionPath("activities", locale)} variant="primary" size="lg">
+              {t.home.primary}
+              <Icon name="arrow-right" size={18} />
+            </Button>
+            <Button href={sectionPath("contact", locale)} variant="outline" size="lg">{t.home.secondary}</Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<style>
+  /* Le voile horizontal : dense a gauche, ouvert a droite, calibre pour une
+   * colonne de texte qui s'arrete avant le milieu. */
+  .hero-veil {
+    background: linear-gradient(90deg, rgb(0 0 0 / 0.6) 0%, rgb(0 0 0 / 0.4) 42%, rgb(0 0 0 / 0) 80%);
+  }
+
+  /* Sous 1024 px le titre et le chapeau occupent toute la largeur : le voile
+   * devient VERTICAL. La couleur est lue sur --reef-background, jamais sur
+   * --color-background : dans .deep-scene, il porte l'encre sombre de la scene. */
+  @media (max-width: 63.99rem) {
+    .hero-veil {
+      background: linear-gradient(
+        180deg,
+        color-mix(in oklab, var(--reef-background) 70%, transparent) 0%,
+        color-mix(in oklab, var(--reef-background) 78%, transparent) 55%,
+        color-mix(in oklab, var(--reef-background) 60%, transparent) 100%
+      );
+    }
+  }
+</style>

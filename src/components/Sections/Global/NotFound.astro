@@ -1,0 +1,24 @@
+---
+// src/components/Sections/Global/NotFound.astro - la page introuvable d'une langue : titre, phrase d'aide et retour a l'accueil.
+//
+// Pas de table de traductions : l'adresse demandee n'existe dans aucune langue,
+// donc ni canonical ni hreflang (voir BaseHead), et le selecteur de langue
+// renvoie a l'accueil de chaque langue.
+import { Icon } from "@components/svg/icons";
+import { Button } from "@components/ui/button";
+import PageHero from "@components/Sections/Global/PageHero.astro";
+import BaseLayout from "@layouts/BaseLayout.astro";
+import { getLocale, sectionPath, useTranslations } from "@i18n";
+
+const locale = getLocale(Astro);
+const t = useTranslations(locale);
+---
+
+<BaseLayout title={t.seo.notFound.title} description={t.seo.notFound.description} noindex>
+  <PageHero title={t.common.notFoundTitle} lede={t.common.notFoundLede}>
+    <Button href={sectionPath("home", locale)} variant="primary" size="lg">
+      <Icon name="arrow-left" size={18} />
+      {t.common.notFoundCta}
+    </Button>
+  </PageHero>
+</BaseLayout>

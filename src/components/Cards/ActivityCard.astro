@@ -1,0 +1,58 @@
+---
+// src/components/Cards/ActivityCard.astro - la carte d'une activite : image, titre, resume et lien vers sa page.
+//
+// Memes principes que la carte de billet de Reef : bordure fine, fond de carte,
+// relief et leger soulevement au survol. Le lien couvre toute la carte via
+// ::after plutot que d'envelopper le tout dans une ancre : un seul arret de
+// tabulation, et le titre reste le nom accessible du lien.
+import { Icon } from "@components/svg/icons";
+import { activityMedia } from "@data/activities";
+import { activityPath, useTranslations, type ActivityId, type Locale } from "@i18n";
+import { Image } from "astro:assets";
+
+type Props = {
+  id: ActivityId;
+  locale: Locale;
+  /** Niveau de titre reel : h2 dans une grille sans sous-titre, h3 sous un titre de section. */
+  as?: "h2" | "h3";
+  class?: string;
+};
+
+const { id, locale, as: Tag = "h3", class: className }: Props = Astro.props;
+const t = useTranslations(locale);
+const item = t.activities[id];
+const media = activityMedia[id];
+---
+
+<article
+  class:list={[
+    "group border-border bg-card rounded-card relative flex flex-col overflow-hidden border",
+    "transition-[border-color,transform,box-shadow] duration-300",
+    "hover:shadow-float hover:border-foreground/20 hover:-translate-y-0.5",
+    className,
+  ]}
+  data-slot="activity-card"
+>
+  <Image
+    src={media.image}
+    alt={item.imageAlt}
+    widths={[420, 760]}
+    sizes="(min-width: 1024px) 24rem, (min-width: 640px) 45vw, 92vw"
+    class="aspect-[3/2] w-full object-cover"
+    loading="lazy"
+    decoding="async"
+  />
+
+  <div class="flex flex-1 flex-col gap-3 p-6">
+    <Tag class="font-display text-foreground text-xl leading-snug font-semibold text-balance">
+      <a href={activityPath(id, locale)} class="after:absolute after:inset-0 after:content-['']">
+        {item.name}
+      </a>
+    </Tag>
+    <p class="text-muted-foreground line-clamp-3 text-[0.95rem] leading-relaxed">{item.summary}</p>
+    <p class="text-primary-text mt-auto flex items-center gap-2 pt-2 text-sm font-semibold" aria-hidden="true">
+      {t.common.learnMore}
+      <Icon name="arrow-right" size={16} class="transition-transform duration-200 group-hover:translate-x-1" />
+    </p>
+  </div>
+</article>

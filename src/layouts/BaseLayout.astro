@@ -1,0 +1,48 @@
+---
+// src/layouts/BaseLayout.astro - squelette de toutes les pages : <html lang>, head SEO, barre, contenu principal, pied de page.
+// Les pages injectent leur JSON-LD via <Fragment slot="head">.
+import Footer from "@components/Sections/Global/Footer.astro";
+import Navbar from "@components/Sections/Global/Navbar.astro";
+import { getLocale, localeMeta, sectionPath, translationsOf, type SectionKey, type Translations } from "@i18n";
+import BaseHead from "@layouts/BaseHead.astro";
+import "@styles/global.css";
+
+export interface Props {
+  title: string;
+  description?: string;
+  image?: { src: string; alt: string };
+  type?: "website" | "article";
+  noindex?: boolean;
+  publishedTime?: Date;
+  modifiedTime?: Date | undefined;
+  /** L'adresse de la page dans chaque langue : le selecteur de langue et hreflang la lisent. */
+  translations?: Translations;
+  /** La rubrique de la barre a marquer comme page courante (aria-current). */
+  current?: SectionKey;
+}
+
+const { title, description, image, type, noindex, translations, current, publishedTime, modifiedTime } = Astro.props;
+
+// lang et dir viennent de la langue de l'URL, jamais d'une constante : un
+// lecteur d'ecran change de voix entre /contact/ et /fr/contact/.
+const locale = getLocale(Astro);
+const meta = localeMeta[locale];
+// Sans table de traductions (page introuvable), le selecteur renvoie a l'accueil de chaque langue.
+const switcher = translations ?? translationsOf((code) => sectionPath("home", code));
+---
+
+<!doctype html>
+<html lang={meta.htmlLang} dir={meta.dir}>
+  <head>
+    <BaseHead {title} {description} {image} {type} {noindex} {translations} {publishedTime} {modifiedTime}>
+      <slot name="head" />
+    </BaseHead>
+  </head>
+  <body>
+    <Navbar translations={switcher} {current} />
+    <main id="content" tabindex="-1" class="outline-none focus-visible:ring-0">
+      <slot />
+    </main>
+    <Footer translations={switcher} />
+  </body>
+</html>
