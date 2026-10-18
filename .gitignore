@@ -1,0 +1,22 @@
+# .gitignore - keeps installs, build output and generated caches out of the repository.
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Astro generated types and content cache
+.astro/
+
+# Variables d'environnement locales : le site n'en demande aucune.
+.env
+
+# Outillage local des autres assistants de code : jamais publie.
+.cursor/
+.windsurf/
+
+# Systeme et journaux.
+.DS_Store
+Thumbs.db
+*.log
